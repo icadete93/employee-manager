@@ -1,4 +1,8 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
 
 DIV_CHOICES = (
     ('NIT', 'NIT'),
@@ -24,15 +28,16 @@ SECURITY_LEVELS = (
 
 
 class Employee(models.Model):
-    username = models.CharField(
-        max_length=16
-    )
+    user = models.OneToOneField(User,
+                                on_delete=models.CASCADE)
+    '''
     last_name = models.CharField(
         max_length=20, verbose_name='Last Name'
     )
     first_name = models.CharField(
         max_length=20, verbose_name='First Name'
     )
+    '''
     middle_initial = models.CharField(
         max_length=1, blank=True, default='', verbose_name='MI'
     )
@@ -57,9 +62,6 @@ class Employee(models.Model):
     active = models.BooleanField(
         default=True
     )
-    personal_email = models.EmailField(
-        default='personal@example.com', verbose_name='Personal Email'
-    )
     group_email = models.EmailField(
         default='group@example.com', verbose_name='Group Email'
     )
@@ -79,10 +81,3 @@ class Employee(models.Model):
     manager = models.CharField(
         max_length=40, blank=True, default='manager'
     )
-
-    owner = models.ForeignKey(
-        'auth.User', related_name='employees', on_delete=models.CASCADE
-    )
-
-    class Meta:
-        ordering = ('division', 'office', 'job_title',)

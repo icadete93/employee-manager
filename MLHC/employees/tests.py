@@ -3,6 +3,4 @@ from .models import Employee
 
 
 class ModelTestCase(TestCase):
-
-    def setUp(self):
-        self.
+    pass
