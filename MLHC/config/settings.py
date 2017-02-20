@@ -81,7 +81,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'mlhc_employees',
-        'USER': 'mlhc_131_dba',
+        'USER': 'mlhc_dba',
         'PASSWORD': os.environ.get('EMAIL_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '',

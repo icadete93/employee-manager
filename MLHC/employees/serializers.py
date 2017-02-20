@@ -7,9 +7,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Employee
-        owner = serializers.ReadOnlyField(source='owner.username')
         fields = (
-            'id', 'middle_initial',
+            'middle_initial',
             'date_created', 'date_modified', 'active',
             'group_email', 'direct_phone_number', 'cell_phone_number',
             'home_phone_number', 'supervisor', 'manager', 'division',
@@ -20,7 +19,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
 
     employee = EmployeeSerializer()
-    #first_name = serializer.CharField(max_length=20, blank)
+
     class Meta:
         model = User
         fields = ('id', 'username', 'email', 'first_name', 'employee')
@@ -36,9 +35,19 @@ class UserSerializer(serializers.ModelSerializer):
 
         employee = instance.employee
 
-        instance.username = validated_data.get('username, instance.username')
-        instance.email = validated_data.get('email, instance.email')
+        instance.username = validated_data.get('username', 'instance.username')
+        instance.email = validated_data.get('email', 'instance.email')
+        instance.first_name = validated_data.get('first_name', 'instance.first_name')
         instance.save()
+
+        employee.division = employee_data.get(
+            'division',
+            employee.division
+        )
+        employee.office = employee_data.get(
+            'office',
+            employee.office
+        )
 
         employee.save()
 

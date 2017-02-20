@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
+from rest_framework.authtoken.models import Token
 
 DIV_CHOICES = (
     ('NIT', 'NIT'),
@@ -28,16 +29,21 @@ SECURITY_LEVELS = (
 
 
 class Employee(models.Model):
-    user = models.OneToOneField(User,
-                                on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, primary_key=True, on_delete=models.CASCADE)
     '''
-    last_name = models.CharField(
-        max_length=20, verbose_name='Last Name'
-    )
-    first_name = models.CharField(
-        max_length=20, verbose_name='First Name'
-    )
+    @property
+    def username(self):
+        return self.user.username
+
+    @property
+    def last_name(self):
+        return self.user.last_name
     '''
+    @property
+    def first_name(self):
+        return self.user.first_name
+
     middle_initial = models.CharField(
         max_length=1, blank=True, default='', verbose_name='MI'
     )
@@ -81,3 +87,14 @@ class Employee(models.Model):
     manager = models.CharField(
         max_length=40, blank=True, default='manager'
     )
+
+    @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    def create_employee(sender, created, instance, **kwargs):
+        if created:
+            employee = Employee(user=instance)
+            employee.save()
+
+    @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    def create_auth_token(sender, signal, instance=None, created=False, **kwargs):
+        if created:
+            Token.objects.create(user=instance)
