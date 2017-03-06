@@ -58,7 +58,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR, os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -81,14 +81,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'mlhc_employees',
-        'USER': 'mlhc_131_dba',
+        'USER': 'mlhc_dba',
         'PASSWORD': os.environ.get('EMAIL_PASSWORD'),
         'HOST': 'localhost',
         'PORT': '',
     }
 }
 
-
+AUTH_USER_MODEL = 'employees.EmployeeUser'
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators
 
@@ -135,6 +135,6 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework_jwt.authentication.JSONWebTokenAuthentication'
+        'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
     ),
 }

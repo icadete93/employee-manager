@@ -7,7 +7,6 @@ djoser==0.5.4
 httpie==0.9.9
 packaging==16.8
 psycopg2==2.6.2
-Pygments==2.2.0
 PyJWT==1.4.2
 pyparsing==2.1.10
 requests==2.13.0

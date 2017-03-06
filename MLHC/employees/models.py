@@ -1,6 +1,9 @@
+import uuid
 from django.db import models
-from django.contrib.auth.models import User
-from django.db.models.signals import post_save
+from django.contrib.auth.models import (
+    BaseUserManager, AbstractBaseUser
+)
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.conf import settings
 from rest_framework.authtoken.models import Token
@@ -28,21 +31,93 @@ SECURITY_LEVELS = (
 )
 
 
-class Employee(models.Model):
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, primary_key=True, on_delete=models.CASCADE)
-    '''
-    @property
-    def username(self):
-        return self.user.username
+class EmployeeUserManager(BaseUserManager):
+    def create_user(self, username, email, last_name, password=None, **extra_fields):
+        if not email:
+            raise ValueError('Users must have an email address')
+        if not username:
+            raise ValueError('Users must have a username')
+        user = self.model(
+            email=self.normalize_email(email),
+            username=username,
+            last_name=last_name,
+        )
+
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email, last_name, password, **extra_fields):
+        user = self.create_user(username, email, last_name, password=password, **extra_fields)
+        user.is_admin = True
+        user.save(using=self._db)
+        return user
+
+
+class EmployeeUser(AbstractBaseUser):
+    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
+    first_name = models.CharField(max_length=30, blank=True)
+    last_name = models.CharField(max_length=30)
+    username = models.CharField(max_length=30, unique=True)
+    is_active = models.BooleanField(default=True)
+    is_admin = models.BooleanField(default=False)
+
+    objects = EmployeeUserManager()
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'last_name']
+
+    def get_full_name(self):
+        username = self.clean(self.username)
+        return username
+
+    def get_short_name(self):
+        return self.username
+
+    def __str__(self):
+        return self.email
+
+    def get_email(self):
+        return self.email
+
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
 
     @property
+    def is_superuser(self):
+        return self.is_admin
+
+    @property
+    def is_staff(self):
+        return self.is_admin
+
+    class Meta:
+        verbose_name_plural = "Users"
+
+
+class Employee(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
+
+    def username(self):
+        return self.user.get_username()
+    username = property(username)
+
+    def email(self):
+        return self.user.email
+    email = property(email)
+
     def last_name(self):
         return self.user.last_name
-    '''
-    @property
+    last_name = property(last_name)
+
     def first_name(self):
         return self.user.first_name
+    first_name = property(first_name)
 
     middle_initial = models.CharField(
         max_length=1, blank=True, default='', verbose_name='MI'

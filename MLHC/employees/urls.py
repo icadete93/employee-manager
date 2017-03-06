@@ -9,6 +9,7 @@ router.register(r'employees', views.EmployeeViewSet)
 router.register(r'users', views.UserViewSet)
 
 urlpatterns = [
+    url(r'^users/(?P<pk>[0-9]+)/change-password/$', views.ChangePasswordView.as_view()),
     url(r'^', include(router.urls)),
-    url(r'^api-token-authc/$', csrf_exempt(obtain_jwt_token))
+    url(r'^api-token-auth/$', csrf_exempt(obtain_jwt_token))
 ]
