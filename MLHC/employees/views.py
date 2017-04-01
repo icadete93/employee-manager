@@ -1,44 +1,61 @@
-from rest_framework import permissions, viewsets
-from employees.permissions import IsOwner, EmployeePermission
-#from rest_framework.response import Response
-from employees.models import Employee, EmployeeUser
-
-from employees.serializers import (
-    EmployeeSerializer, UserSerializer,
-    ChangePasswordSerializer
+from rest_framework import (
+    status, permissions, viewsets
 )
-from django.contrib.auth.models import User
-from rest_framework.decorators import detail_route
+from rest_framework.decorators import list_route
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.generics import UpdateAPIView
-
-
-class EmployeeViewSet(viewsets.ModelViewSet):
-    queryset = Employee.objects.all()
-    serializer_class = EmployeeSerializer
-    permission_classes = (permissions.IsAuthenticated, IsOwner,)
-
-    @detail_route(methods=['post'])
-    def set_password(self, request, pk=None):
-        user = self.get_object()
-        serializer = EmployeeSerializer(data=request.data)
-        if serializer.is_valid():
-            user.set_password(serializer.data['password'])
-            user.save()
-            return Response({'status': 'password set'})
-        else:
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+from rest_framework.views import APIView
+from rest_framework.renderers import TemplateHTMLRenderer
+from employees.models import EmployeeUser
+from employees.serializers import (
+    EmployeeSerializer, CreateUserSerializer,
+    ChangePasswordSerializer, UpdateUserSerializer
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):
+
     queryset = EmployeeUser.objects.all()
-    serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated, EmployeePermission,)
+    serializer_class = CreateUserSerializer
+    permission_classes = (permissions.IsAuthenticated,)
+    lookup_field = 'username'
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return CreateUserSerializer
+        else:
+            return UpdateUserSerializer
+
+    @list_route()
+    def managed_users(self, request):
+        managed_users = EmployeeUser.objects.filter(employee__manager=self.request.user.username)
+
+        page = self.paginate_queryset(managed_users)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(managed_users, many=True)
+        return Response(serializer.data)
+
+
+class UserList(APIView):
+
+    permission_classes = (permissions.IsAuthenticated, permissions.IsAdminUser,)
+    renderer_classes = [TemplateHTMLRenderer]
+    template_name = 'employees/user_list.html'
+
+    def get_object(self, queryset=None):
+        obj = self.request.user
+        return obj
+
+    def get(self, request, format=None):
+        queryset = EmployeeUser.objects.filter(employee__manager=self.get_object().username)
+        return Response({'employees': queryset})
 
 
 class ChangePasswordView(UpdateAPIView):
+
     serializer_class = ChangePasswordSerializer
     model = EmployeeUser
     permission_classes = (permissions.IsAuthenticated,)

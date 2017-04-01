@@ -1,0 +1,82 @@
+{% load staticfiles %}
+{% load static %}
+{% load i18n %}
+{% load rest_framework %}
+{% load employee_manager %}
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static "employees/css/styles.css" %}">
+
+</head>
+{% block bootstrap_theme %}
+    <link rel="stylesheet" href="http://bootswatch.com/lumen/bootstrap.min.css" type="text/css">
+{% endblock %}
+{% block body %}
+<body>
+    <div class="wrapper">
+    {% block navbar %}
+        <div class="navbar navbar-static-top
+            {% block bootstrap_navbar_variant %}
+              navbar-inverse
+            {% endblock %}">
+          <div class="container">
+          <span>
+            {% block branding %}
+                <a href="" rel="nofollow" class="navbar-brand">
+                  <img class="companyLogo" src="{% static "employees/css/mlhc_branding.png" %}" />
+                </a>
+            {% endblock branding %}
+          </span>
+            <ul class="nav navbar-nav pull-right">
+              {% block userlinks %}
+                {% if user.is_authenticated %}
+                  {% my_optional_logout request user %}
+                  <li class="dropdown"><a href="/users/{{ user.username }}/">profile</a></li>
+                {% else %}
+                  {% my_optional_login request %}
+                {% endif %}
+              {% endblock %}
+            </ul>
+          </div>
+        </div>
+      {% endblock %}
+      </div>
+    <h1>Users</h1>
+    <a href="/users/"><button type="button">Add User</button></a>
+    <input type="text" id="employeeSearch" onkeyup="searchFunction()" placeholder="Search by username">
+    <table id="employeeTable">
+        <tr class="header">
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th onclick="sortTable(3)">Manager</th>
+            <th onclick="sortTable(4)">Division</th>
+            <th onclick="sortTable(5)">Office</th>
+            <th onclick="sortTable(6)">Job Title</th>
+            <th>Direct Phone</th>
+            <th>Cell Phone</th>
+            <th>Home Phone</th>
+        </tr>
+        {% for employee in employees %}
+        <tr>
+        <td><a href="/users/{{employee.username}}" style="text-decoration:none; color:black;">{{ employee.username }}</a></td>
+        <td>{{ employee.first_name }}</td>
+        <td>{{ employee.last_name }}</td>
+        <td>{{ employee.employee.manager }}</td>
+        <td>{{ employee.employee.division }}</td>
+        <td>{{ employee.employee.office }}</td>
+        <td>{{ employee.employee.job_title }}</td>
+        <td>{{ employee.employee.direct_phone_number }}</td>
+        <td>{{ employee.employee.cell_phone_number }}</td>
+        <td>{{ employee.employee.home_phone_number }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    <script src="{% static "employees/js/employees.js" %}"></script>
+    <script src="{% static "rest_framework/js/jquery-1.12.4.min.js" %}"></script>
+    <script src="{% static "rest_framework/js/bootstrap.min.js" %}"></script>
+</body>
+
+{% endblock body %}
+</html>
+

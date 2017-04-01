@@ -3,16 +3,23 @@ from django.db import models
 from django.contrib.auth.models import (
     BaseUserManager, AbstractBaseUser
 )
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
 from rest_framework.authtoken.models import Token
 
 DIV_CHOICES = (
+    ('MLHC', 'MLHC'),
+    ('NCS', 'NCS'),
+    ('MTE', 'MTE'),
     ('NIT', 'NIT'),
-    ('DEF', 'DEF'),
-    ('GHI', 'GHI'),
-    ('JKL', 'JKL'),
+    ('WTE', 'WTE'),
+    ('PRC', 'PRC'),
+    ('PTI', 'PTI'),
+    ('NCSA', 'NCSA'),
+    ('NCSAR', 'NCSAR'),
+    ('NCSMD', 'NCSMD'),
+    ('WLTIC', 'WLTIC'),
 )
 OFFICE_CHOICES = (
     ('2301', '2301'),
@@ -25,42 +32,53 @@ JOB_TITLES = (
     ('TO', 'Title Officer'),
 )
 SECURITY_LEVELS = (
-    ('S', 'Supervisor'),
+    ('E', 'Employee'),
     ('M', 'Manager'),
-    ('E', 'Employee')
+    ('S', 'Supervisor'),
 )
 
 
 class EmployeeUserManager(BaseUserManager):
-    def create_user(self, username, email, last_name, password=None, **extra_fields):
-        if not email:
-            raise ValueError('Users must have an email address')
-        if not username:
-            raise ValueError('Users must have a username')
-        user = self.model(
-            email=self.normalize_email(email),
-            username=username,
-            last_name=last_name,
-        )
 
+    def create_user(self, username, email, last_name, password, **extra_fields):
+        if not email:
+            raise ValueError('An email address is required.')
+        if not username:
+            raise ValueError('A username is required.')
+        email = self.normalize_email(email)
+        user = self.model(email=email, username=username, last_name=last_name)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, username, email, last_name, password, **extra_fields):
-        user = self.create_user(username, email, last_name, password=password, **extra_fields)
+        user = self.create_user(
+            username, email, last_name, password=password, **extra_fields
+        )
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
         user.is_admin = True
         user.save(using=self._db)
         return user
 
 
 class EmployeeUser(AbstractBaseUser):
-    email = models.EmailField(verbose_name='email address', max_length=255, unique=True)
-    first_name = models.CharField(max_length=30, blank=True)
-    last_name = models.CharField(max_length=30)
-    username = models.CharField(max_length=30, unique=True)
-    is_active = models.BooleanField(default=True)
-    is_admin = models.BooleanField(default=False)
+
+    email = models.EmailField(
+        verbose_name='email address', max_length=255, unique=True
+    )
+    first_name = models.CharField(
+        max_length=30, blank=True
+    )
+    last_name = models.CharField(
+        max_length=30
+    )
+    username = models.CharField(
+        max_length=30, unique=True
+    )
+    is_admin = models.BooleanField(
+        default=False
+    )
 
     objects = EmployeeUserManager()
 
@@ -75,7 +93,7 @@ class EmployeeUser(AbstractBaseUser):
         return self.username
 
     def __str__(self):
-        return self.email
+        return self.username
 
     def get_email(self):
         return self.email
@@ -99,13 +117,17 @@ class EmployeeUser(AbstractBaseUser):
 
 
 class Employee(models.Model):
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE,)
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def username(self):
         return self.user.get_username()
     username = property(username)
+
+    def is_admin(self):
+        return self.user.is_admin
 
     def email(self):
         return self.user.email
@@ -126,7 +148,7 @@ class Employee(models.Model):
         max_length=40, blank=True, default='supervisor'
     )
     division = models.CharField(
-        max_length=3, choices=DIV_CHOICES, default='NIT'
+        max_length=5, choices=DIV_CHOICES, default='NIT'
     )
     office = models.CharField(
         max_length=4, choices=OFFICE_CHOICES, default='2301'
@@ -138,7 +160,7 @@ class Employee(models.Model):
         auto_now=True
     )
     job_title = models.CharField(
-        max_length=3, choices=JOB_TITLES, default='EO'
+        max_length=2, choices=JOB_TITLES, default='EO'
     )
     active = models.BooleanField(
         default=True
@@ -162,12 +184,6 @@ class Employee(models.Model):
     manager = models.CharField(
         max_length=40, blank=True, default='manager'
     )
-
-    @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-    def create_employee(sender, created, instance, **kwargs):
-        if created:
-            employee = Employee(user=instance)
-            employee.save()
 
     @receiver(post_save, sender=settings.AUTH_USER_MODEL)
     def create_auth_token(sender, signal, instance=None, created=False, **kwargs):

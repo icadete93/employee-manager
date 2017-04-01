@@ -16,12 +16,20 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf import settings
+from employees import views
+from rest_framework.routers import SimpleRouter
+from django.contrib.auth import views as djangoview
+template_name = {'template_name': 'rest_framework/login.html'}
+
+router = SimpleRouter()
+router.register(r'users', views.UserViewSet, base_name='user')
+
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^api-auth/', include('rest_framework.urls',
-                               namespace='rest_framework')),
-    url(r'^auth/', include('djoser.urls.authtoken')),
+    url(r'^login/$', djangoview.login, template_name, name='login',),
+    url(r'^logout/$', djangoview.logout, template_name, name='logout'),
+    url(r'^', include(router.urls)),
     url(r'^', include('employees.urls')),
 ]
 

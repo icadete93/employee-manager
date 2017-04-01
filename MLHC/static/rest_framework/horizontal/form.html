@@ -1,0 +1,4 @@
+{% load rest_framework %}
+{% for field in form %}
+    {% render_field field style=style %}
+{% endfor %}
