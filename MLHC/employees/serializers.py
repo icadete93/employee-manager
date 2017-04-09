@@ -23,7 +23,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'division',
             'office',
             'job_title',
-            'security_level',
+            # 'security_level',
         )
 
 
@@ -39,7 +39,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
           'username',
           'email',
           'password',
-          'is_admin',
+          'security_level',
           'employee',
         )
 
@@ -67,8 +67,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get(
             'first_name', 'instance.first_name'
         )
-        instance.is_admin = validated_data.get(
-            'is_admin', 'instance.is_admin'
+        instance.security_level = validated_data.get(
+            'security_level', 'instance.security_level'
         )
         instance.set_password(validated_data['password'])
         instance.save()
@@ -119,10 +119,10 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'job_title',
             employee.job_title
         )
-        employee.security_level = employee_data.get(
-            'security_level',
-            employee.security_level
-        )
+        # employee.security_level = employee_data.get(
+        #     'security_level',
+        #     employee.security_level
+        # )
         employee.active = employee_data.get(
             'active',
             employee.active
@@ -152,17 +152,9 @@ class UpdateUserSerializer(serializers.ModelSerializer):
           'last_name',
           'username',
           'email',
-          'is_admin',
+          'security_level',
           'employee',
         )
-
-    # def create(self, validated_data):
-    #     employee_data = validated_data.pop('employee')
-    #     user = EmployeeUser.objects.create(**validated_data)
-    #     user.set_password(validated_data['password'])
-    #     user.save()
-    #     Employee.objects.create(user=user, **employee_data)
-    #     return user
 
     def update(self, instance, validated_data):
 
@@ -180,8 +172,8 @@ class UpdateUserSerializer(serializers.ModelSerializer):
         instance.first_name = validated_data.get(
             'first_name', 'instance.first_name'
         )
-        instance.is_admin = validated_data.get(
-            'is_admin', 'instance.is_admin'
+        instance.security_level = validated_data.get(
+            'security_level', 'instance.security_level'
         )
         instance.save()
 
@@ -231,10 +223,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             'job_title',
             employee.job_title
         )
-        employee.security_level = employee_data.get(
-            'security_level',
-            employee.security_level
-        )
         employee.active = employee_data.get(
             'active',
             employee.active
@@ -248,8 +236,8 @@ class UpdateUserSerializer(serializers.ModelSerializer):
             employee.date_modified
         )
         employee.save()
-
         update_session_auth_hash(self.context.get('request'), instance)
+
         return instance
 
 

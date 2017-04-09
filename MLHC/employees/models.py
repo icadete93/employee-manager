@@ -40,20 +40,34 @@ SECURITY_LEVELS = (
 
 class EmployeeUserManager(BaseUserManager):
 
-    def create_user(self, username, email, last_name, password, **extra_fields):
+    def _create_user(self, username, email, security_level, password, **extra_fields):
         if not email:
             raise ValueError('An email address is required.')
         if not username:
             raise ValueError('A username is required.')
+        if not security_level:
+            raise ValueError('A security level is required.')
         email = self.normalize_email(email)
-        user = self.model(email=email, username=username, last_name=last_name)
+        user = self.model(email=email, username=username, security_level=security_level)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, last_name, password, **extra_fields):
-        user = self.create_user(
-            username, email, last_name, password=password, **extra_fields
+    def create_user(self, username, email, security_level, password, **extra_fields):
+        user = self._create_user(
+            username, email, security_level, password=password, **extra_fields
+        )
+        if user.security_level == 'M' or 'S':
+            extra_fields.setdefault('is_staff', True)
+        else:
+            extra_fields.setdefault('is_staff', False)
+
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, email, security_level, password, **extra_fields):
+        user = self._create_user(
+            username, email, security_level, password=password, **extra_fields
         )
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
@@ -71,19 +85,21 @@ class EmployeeUser(AbstractBaseUser):
         max_length=30, blank=True
     )
     last_name = models.CharField(
-        max_length=30
+        max_length=30, blank=True
     )
     username = models.CharField(
         max_length=30, unique=True
     )
-    is_admin = models.BooleanField(
-        default=False
+    is_admin = models.BooleanField(default=False,)
+    security_level = models.CharField(
+        max_length=1, choices=SECURITY_LEVELS,
+        verbose_name='Security Level'
     )
 
     objects = EmployeeUserManager()
 
     USERNAME_FIELD = 'username'
-    REQUIRED_FIELDS = ['email', 'last_name']
+    REQUIRED_FIELDS = ['email', 'security_level']
 
     def get_full_name(self):
         username = self.clean(self.username)
@@ -104,11 +120,18 @@ class EmployeeUser(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return True
 
+    # @property
+    # def security_level(self):
+    #     if self.is_admin:
+    #         security_level = 'M'
+    #     else:
+    #         security_level = 'E'
+    #     return security_level
+
     @property
     def is_superuser(self):
         return self.is_admin
 
-    @property
     def is_staff(self):
         return self.is_admin
 
@@ -177,10 +200,10 @@ class Employee(models.Model):
     home_phone_number = models.CharField(
         max_length=12, blank=True, default='', verbose_name='Home Phone Number'
     )
-    security_level = models.CharField(
-        max_length=1, choices=SECURITY_LEVELS, default='E',
-        verbose_name='Security Level'
-    )
+    # security_level = models.CharField(
+    #     max_length=1, choices=SECURITY_LEVELS, default='E',
+    #     verbose_name='Security Level'
+    # )
     manager = models.CharField(
         max_length=40, blank=True, default='manager'
     )
