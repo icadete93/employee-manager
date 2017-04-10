@@ -212,3 +212,8 @@ class Employee(models.Model):
     def create_auth_token(sender, signal, instance=None, created=False, **kwargs):
         if created:
             Token.objects.create(user=instance)
+
+    @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    def create_employee_profile(sender, signal, instance=None, created=False, **kwargs):
+        if created:
+            Employee.objects.create(user=instance)
