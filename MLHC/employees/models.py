@@ -200,9 +200,3 @@ class Employee(models.Model):
     def create_auth_token(sender, signal, instance=None, created=False, **kwargs):
         if created:
             Token.objects.create(user=instance)
-
-    # REMOVED BECAUSE OF DUPLICATE KEY ERROR
-    # @receiver(post_save, sender=settings.AUTH_USER_MODEL)
-    # def ensure_profile_exists(sender, **kwargs):
-    #     if kwargs.get('created', False):
-    #         Employee.objects.get_or_create(user=kwargs.get('instance'))
