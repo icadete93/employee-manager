@@ -32,5 +32,5 @@ class ManagerPermission(permissions.BasePermission):
 
 
 class PasswordChangePermission(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        pass
+    def has_permission(self, request, view):
+        return request.user.username in request.get_full_path()

@@ -9,7 +9,6 @@ class EmployeeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Employee
         fields = (
-            'id',
             'middle_initial',
             'date_created',
             'date_modified',
@@ -23,12 +22,12 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'division',
             'office',
             'job_title',
-            # 'security_level',
         )
 
 
 class CreateUserSerializer(serializers.ModelSerializer):
     employee = EmployeeSerializer()
+    password = serializers.CharField(style={'input_type': 'password'})
 
     class Meta:
         model = EmployeeUser
@@ -75,14 +74,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
 
         employee_data = validated_data.pop('employee')
 
-        # employee.first_name = employee_data.get(
-        #     'first_name',
-        #     employee.first_name
-        # )
-        # employee.last_name = employee_data.get(
-        #     'last_name',
-        #     employee.last_name
-        # )
         employee.division = employee_data.get(
             'division',
             employee.division
@@ -119,10 +110,6 @@ class CreateUserSerializer(serializers.ModelSerializer):
             'job_title',
             employee.job_title
         )
-        # employee.security_level = employee_data.get(
-        #     'security_level',
-        #     employee.security_level
-        # )
         employee.active = employee_data.get(
             'active',
             employee.active
@@ -155,6 +142,9 @@ class UpdateUserSerializer(serializers.ModelSerializer):
           'security_level',
           'employee',
         )
+        extra_kwargs = {
+            'employee': {'read_only': True}
+        }
 
     def update(self, instance, validated_data):
 
@@ -179,14 +169,6 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
         employee_data = validated_data.pop('employee')
 
-        # employee.first_name = employee_data.get(
-        #     'first_name',
-        #     employee.first_name
-        # )
-        # employee.last_name = employee_data.get(
-        #     'last_name',
-        #     employee.last_name
-        # )
         employee.division = employee_data.get(
             'division',
             employee.division
@@ -242,5 +224,5 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
-    new_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=True, style={'input_type': 'password'})
+    new_password = serializers.CharField(required=True, style={'input_type': 'password'})

@@ -37,9 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'employees',
     'rest_framework',
     'rest_framework.authtoken',
-    'employees',
 ]
 
 MIDDLEWARE = [
@@ -138,3 +138,12 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
 }
+
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = 'pastaaroni@gmail.com'
+SERVER_EMAIL = 'pastaaroni@gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'pastaaroni@gmail.com'
+EMAIL_HOST_PASSWORD = 'Ripa1t0id21@'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

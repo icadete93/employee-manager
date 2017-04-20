@@ -91,9 +91,9 @@ class EmployeeUser(AbstractBaseUser):
         max_length=30, unique=True
     )
     is_admin = models.BooleanField(default=False,)
+
     security_level = models.CharField(
-        max_length=1, choices=SECURITY_LEVELS,
-        verbose_name='Security Level'
+        max_length=1, choices=SECURITY_LEVELS, verbose_name='Security Level'
     )
 
     objects = EmployeeUserManager()
@@ -120,14 +120,6 @@ class EmployeeUser(AbstractBaseUser):
     def has_module_perms(self, app_label):
         return True
 
-    # @property
-    # def security_level(self):
-    #     if self.is_admin:
-    #         security_level = 'M'
-    #     else:
-    #         security_level = 'E'
-    #     return security_level
-
     @property
     def is_superuser(self):
         return self.is_admin
@@ -141,9 +133,9 @@ class EmployeeUser(AbstractBaseUser):
 
 class Employee(models.Model):
 
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, primary_key=True, on_delete=models.CASCADE)
 
     def username(self):
         return self.user.get_username()
@@ -200,10 +192,6 @@ class Employee(models.Model):
     home_phone_number = models.CharField(
         max_length=12, blank=True, default='', verbose_name='Home Phone Number'
     )
-    # security_level = models.CharField(
-    #     max_length=1, choices=SECURITY_LEVELS, default='E',
-    #     verbose_name='Security Level'
-    # )
     manager = models.CharField(
         max_length=40, blank=True, default='manager'
     )
@@ -212,3 +200,9 @@ class Employee(models.Model):
     def create_auth_token(sender, signal, instance=None, created=False, **kwargs):
         if created:
             Token.objects.create(user=instance)
+
+    # REMOVED BECAUSE OF DUPLICATE KEY ERROR
+    # @receiver(post_save, sender=settings.AUTH_USER_MODEL)
+    # def ensure_profile_exists(sender, **kwargs):
+    #     if kwargs.get('created', False):
+    #         Employee.objects.get_or_create(user=kwargs.get('instance'))
